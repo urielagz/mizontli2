@@ -1,23 +1,10 @@
 -- =========================================================
 -- Miztontli - Esquema completo y vigente del proyecto
 -- =========================================================
--- Este es el esquema objetivo actual: ya incluye el módulo académico
--- rediseñado (Materia -> Índice -> Tema/capítulo -> Recurso / Actividad /
--- Entrega / Examen Final) directamente en las CREATE TABLE, sin necesidad
--- de aplicar ALTER por separado. Materia ya no cuelga de Asignatura -- es
--- el nivel superior del módulo académico.
---
--- Uso:
---   - Base de datos NUEVA/vacía: corre solo este archivo.
---   - Base de datos EXISTENTE con el esquema viejo (con Leccion,
---     Evaluacion, Pregunta, Opcion, Respuesta, ResultadoEvaluacion):
---     NO corras este archivo directamente sobre ella. En su lugar aplica
---     database/migrations/001_modulo_academico.sql y luego
---     database/migrations/migrations_completo.sql, que migran esa base
---     a este mismo esquema sin perder datos (excepto las tablas que el
---     rediseño elimina a propósito).
---
--- Idempotente: usa CREATE ... IF NOT EXISTS, se puede correr varias veces.
+-- Materia -> Índice -> Tema/capítulo -> Recurso / Actividad / Entrega /
+-- Examen Final. Materia es el nivel superior (ya no depende de
+-- Asignatura). Idempotente: usa CREATE ... IF NOT EXISTS, se puede
+-- correr varias veces.
 -- =========================================================
 
 -- ---------------------------------------------------------
@@ -58,7 +45,6 @@ CREATE TABLE IF NOT EXISTS usuario (
     estado BOOLEAN NOT NULL DEFAULT TRUE
 );
 
--- Solicitudes de registro como docente (revisión manual del admin).
 CREATE TABLE IF NOT EXISTS docenteespera (
     id_solicitud SERIAL PRIMARY KEY,
     nombre VARCHAR(50) NOT NULL,
@@ -74,8 +60,6 @@ CREATE TABLE IF NOT EXISTS docenteespera (
 -- ---------------------------------------------------------
 -- 3. Módulo académico: Materia -> Tema
 -- ---------------------------------------------------------
--- Materia: contenedor simple (título + imagen + color), asignado a un
--- docente responsable. Es el nivel superior del módulo académico.
 CREATE TABLE IF NOT EXISTS materia (
     id_materia SERIAL PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
@@ -87,9 +71,6 @@ CREATE TABLE IF NOT EXISTS materia (
     fecha_actualizacion TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
--- Tema: el capítulo completo del libro (título + introducción +
--- contenido largo + hasta 2 imágenes). El "índice" de una materia es
--- solo la lista de sus temas ordenados por "orden"; no se guarda aparte.
 CREATE TABLE IF NOT EXISTS tema (
     id_tema SERIAL PRIMARY KEY,
     nombre VARCHAR(150) NOT NULL,
@@ -103,7 +84,7 @@ CREATE TABLE IF NOT EXISTS tema (
 );
 
 -- ---------------------------------------------------------
--- 4. Recursos (archivos de apoyo de un tema)
+-- 4. Recursos
 -- ---------------------------------------------------------
 CREATE TABLE IF NOT EXISTS recurso (
     id_recurso SERIAL PRIMARY KEY,
@@ -134,11 +115,6 @@ CREATE TABLE IF NOT EXISTS actividad (
     id_docente INTEGER REFERENCES usuario(id_usuario) ON DELETE SET NULL
 );
 
--- Entrega de un alumno para una actividad: puede ser un archivo, una URL
--- (ej. Google Docs, un video), o ambos. El comentario del alumno (al
--- entregar) y las observaciones del docente (al calificar) son columnas
--- separadas a propósito, para que calificar no borre el comentario
--- original del alumno.
 CREATE TABLE IF NOT EXISTS actividad_completada (
     id_registro SERIAL PRIMARY KEY,
     id_usuario INTEGER NOT NULL REFERENCES usuario(id_usuario) ON DELETE CASCADE,
@@ -154,7 +130,7 @@ CREATE TABLE IF NOT EXISTS actividad_completada (
 );
 
 -- ---------------------------------------------------------
--- 6. Examen final (uno por materia, solo enlace a Google Forms)
+-- 6. Examen final
 -- ---------------------------------------------------------
 CREATE TABLE IF NOT EXISTS examen_final (
     id_examen SERIAL PRIMARY KEY,
@@ -167,7 +143,7 @@ CREATE TABLE IF NOT EXISTS examen_final (
 );
 
 -- ---------------------------------------------------------
--- 7. Progreso (caché recalculable de avance por alumno y materia)
+-- 7. Progreso
 -- ---------------------------------------------------------
 CREATE TABLE IF NOT EXISTS progreso (
     id_progreso SERIAL PRIMARY KEY,
@@ -181,12 +157,8 @@ CREATE TABLE IF NOT EXISTS progreso (
 );
 
 -- ---------------------------------------------------------
--- 8. Publicaciones (Anuncios y Asesorías comparten esta tabla;
---    Asesoría se distingue por la marca "__asesoria":true dentro
---    de "contenido", no es una tabla propia), Comentarios y
---    Notificaciones. Ninguna de estas 3 últimas tiene endpoints de
---    autenticación en el backend actual salvo publicacion (que las
---    usa Anuncios/Asesorías, ambos públicos sin token).
+-- 8. Publicaciones (Anuncios/Asesorías), Comentarios, Notificaciones
+--    (sin uso actual en el código, se dejan por compatibilidad)
 -- ---------------------------------------------------------
 CREATE TABLE IF NOT EXISTS publicacion (
     id_publicacion SERIAL PRIMARY KEY,
