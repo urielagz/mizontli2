@@ -14,8 +14,6 @@ export interface Materia {
 
     fecha_actualizacion?: Date;
 
-    id_asignatura: number;
-
     id_docente: number;
 
 }

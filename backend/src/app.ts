@@ -6,8 +6,7 @@ import usuarioRoutes from "./routes/usuario.routes";
 import loginRoutes from "./routes/login.routes";
 import docenteRoutes from "./routes/docente.routes";
 
-// Módulo académico: Asignatura -> Materia -> Tema (índice) -> Recurso / Actividad / Examen final
-import asignaturaRoutes from "./routes/asignatura.routes";
+// Módulo académico: Materia -> Tema (índice) -> Recurso / Actividad / Examen final
 import materiaRoutes from "./routes/materia.routes";
 import temaRoutes from "./routes/tema.routes";
 import recursoRoutes from "./routes/recurso.routes";
@@ -29,7 +28,6 @@ app.use("/login", loginRoutes);
 app.use("/docentes", docenteRoutes);
 
 // Módulo académico
-app.use("/asignaturas", asignaturaRoutes);
 app.use("/materias", materiaRoutes);
 app.use("/temas", temaRoutes);
 app.use("/recursos", recursoRoutes);

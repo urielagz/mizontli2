@@ -1,13 +1,11 @@
 import { pool } from "../config/database";
 import { Materia } from "../models/Materia";
 
-// Materia es un contenedor simple (título + imagen + color). No expone
-// descripcion/nivel_educativo (siguen en la tabla mysql/postgres por
-// compatibilidad, pero ya no forman parte de este módulo) ni el nombre
-// del docente.
+// Materia es un contenedor simple (título + imagen + color) y es el
+// nivel superior del módulo académico (ya no cuelga de Asignatura).
 const COLUMNAS = `
     m.id_materia, m.nombre, m.icono, m.color, m.orden,
-    m.id_asignatura, m.id_docente, m.fecha_creacion, m.fecha_actualizacion
+    m.id_docente, m.fecha_creacion, m.fecha_actualizacion
 `;
 
 class RepositorioMaterias {
@@ -18,10 +16,9 @@ class RepositorioMaterias {
     async obtenerTodas() {
 
         const sql = `
-            SELECT ${COLUMNAS}, a.nombre AS asignatura
+            SELECT ${COLUMNAS}
             FROM Materia m
-            LEFT JOIN Asignatura a ON a.id_asignatura = m.id_asignatura
-            ORDER BY a.nombre NULLS LAST, m.orden, m.nombre;
+            ORDER BY m.orden, m.nombre;
         `;
 
         const { rows } = await pool.query(sql);
@@ -37,34 +34,14 @@ class RepositorioMaterias {
     async obtenerPorId(id: number) {
 
         const sql = `
-            SELECT ${COLUMNAS}, a.nombre AS asignatura
+            SELECT ${COLUMNAS}
             FROM Materia m
-            LEFT JOIN Asignatura a ON a.id_asignatura = m.id_asignatura
             WHERE m.id_materia = $1;
         `;
 
         const { rows } = await pool.query(sql, [id]);
 
         return rows.length ? rows[0] : null;
-
-    }
-
-    // ============================================
-    // Obtener materias de una asignatura
-    // ============================================
-
-    async obtenerPorAsignatura(idAsignatura: number) {
-
-        const sql = `
-            SELECT ${COLUMNAS}
-            FROM Materia m
-            WHERE m.id_asignatura = $1
-            ORDER BY m.orden, m.nombre;
-        `;
-
-        const { rows } = await pool.query(sql, [idAsignatura]);
-
-        return rows;
 
     }
 
@@ -94,8 +71,8 @@ class RepositorioMaterias {
     async crear(materia: Materia) {
 
         const sql = `
-            INSERT INTO Materia (nombre, icono, color, orden, id_asignatura, id_docente)
-            VALUES ($1, $2, $3, $4, $5, $6)
+            INSERT INTO Materia (nombre, icono, color, orden, id_docente)
+            VALUES ($1, $2, $3, $4, $5)
             RETURNING ${COLUMNAS.replace(/m\./g, "")};
         `;
 
@@ -104,7 +81,6 @@ class RepositorioMaterias {
             materia.icono ?? null,
             materia.color ?? null,
             materia.orden ?? 0,
-            materia.id_asignatura,
             materia.id_docente
         ];
 
@@ -122,8 +98,8 @@ class RepositorioMaterias {
 
         const sql = `
             UPDATE Materia
-            SET nombre = $1, icono = $2, color = $3, orden = $4, id_asignatura = $5
-            WHERE id_materia = $6
+            SET nombre = $1, icono = $2, color = $3, orden = $4
+            WHERE id_materia = $5
             RETURNING ${COLUMNAS.replace(/m\./g, "")};
         `;
 
@@ -132,7 +108,6 @@ class RepositorioMaterias {
             materia.icono ?? null,
             materia.color ?? null,
             materia.orden ?? 0,
-            materia.id_asignatura,
             id
         ];
 

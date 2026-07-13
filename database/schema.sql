@@ -2,9 +2,10 @@
 -- Miztontli - Esquema completo y vigente del proyecto
 -- =========================================================
 -- Este es el esquema objetivo actual: ya incluye el módulo académico
--- rediseñado (Asignatura -> Materia -> Índice -> Tema/capítulo ->
--- Recurso / Actividad / Entrega / Examen Final) directamente en las
--- CREATE TABLE, sin necesidad de aplicar ALTER por separado.
+-- rediseñado (Materia -> Índice -> Tema/capítulo -> Recurso / Actividad /
+-- Entrega / Examen Final) directamente en las CREATE TABLE, sin necesidad
+-- de aplicar ALTER por separado. Materia ya no cuelga de Asignatura -- es
+-- el nivel superior del módulo académico.
 --
 -- Uso:
 --   - Base de datos NUEVA/vacía: corre solo este archivo.
@@ -71,28 +72,16 @@ CREATE TABLE IF NOT EXISTS docenteespera (
 );
 
 -- ---------------------------------------------------------
--- 3. Módulo académico: Asignatura -> Materia -> Tema
+-- 3. Módulo académico: Materia -> Tema
 -- ---------------------------------------------------------
--- Asignatura: contenedor simple (título + imagen + color), igual que
--- Materia. No lleva descripción.
-CREATE TABLE IF NOT EXISTS asignatura (
-    id_asignatura SERIAL PRIMARY KEY,
-    nombre VARCHAR(100) NOT NULL UNIQUE,
-    imagen VARCHAR(255),
-    color VARCHAR(20),
-    fecha_creacion TIMESTAMP NOT NULL DEFAULT NOW(),
-    fecha_actualizacion TIMESTAMP NOT NULL DEFAULT NOW()
-);
-
 -- Materia: contenedor simple (título + imagen + color), asignado a un
--- docente responsable dentro de una asignatura.
+-- docente responsable. Es el nivel superior del módulo académico.
 CREATE TABLE IF NOT EXISTS materia (
     id_materia SERIAL PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
     icono VARCHAR(255),
     color VARCHAR(20),
     orden INTEGER NOT NULL DEFAULT 0,
-    id_asignatura INTEGER REFERENCES asignatura(id_asignatura) ON DELETE CASCADE,
     id_docente INTEGER REFERENCES usuario(id_usuario) ON DELETE CASCADE,
     fecha_creacion TIMESTAMP NOT NULL DEFAULT NOW(),
     fecha_actualizacion TIMESTAMP NOT NULL DEFAULT NOW()
@@ -237,7 +226,6 @@ CREATE TABLE IF NOT EXISTS usuario_materia (
 -- ---------------------------------------------------------
 -- 9. Índices de apoyo
 -- ---------------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_materia_asignatura ON materia(id_asignatura);
 CREATE INDEX IF NOT EXISTS idx_materia_docente ON materia(id_docente);
 CREATE INDEX IF NOT EXISTS idx_tema_materia ON tema(id_materia);
 CREATE INDEX IF NOT EXISTS idx_recurso_tema ON recurso(id_tema);

@@ -88,3 +88,10 @@ ALTER TABLE asignatura DROP COLUMN IF EXISTS descripcion;
 -- una URL (ej. Google Docs, un video), o ambos -- estilo Teams.
 -- ---------------------------------------------------------
 ALTER TABLE actividad_completada ADD COLUMN IF NOT EXISTS url_entrega VARCHAR(500);
+
+-- ---------------------------------------------------------
+-- 9. Eliminar Asignatura: Materia deja de colgar de una asignatura y
+-- pasa a ser el nivel superior del módulo académico.
+-- ---------------------------------------------------------
+ALTER TABLE materia DROP COLUMN IF EXISTS id_asignatura;
+DROP TABLE IF EXISTS asignatura CASCADE;

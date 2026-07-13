@@ -1,12 +1,10 @@
 import { Pool } from "pg";
 
-// El esquema del módulo académico (Asignatura, Materia, Tema, Recurso,
-// Actividad, ExamenFinal) vive en database/migrations/001_modulo_academico.sql
-// y database/migrations/migrations_completo.sql. Aplica ambos manualmente
-// (psql -f database/migrations/001_modulo_academico.sql, luego
-// psql -f database/migrations/migrations_completo.sql) antes de usar las
-// rutas /asignaturas, /materias, /temas, /recursos, /actividades y
-// /calificaciones.
+// El esquema del módulo académico (Materia, Tema, Recurso, Actividad,
+// ExamenFinal) vive en database/schema.sql (base nueva) o
+// database/migrations/migrations_completo.sql (base existente). Aplica el
+// que corresponda antes de usar las rutas /materias, /temas, /recursos,
+// /actividades y /calificaciones.
 
 export const pool = new Pool({
     host: "localhost",

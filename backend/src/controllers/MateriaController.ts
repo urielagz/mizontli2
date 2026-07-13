@@ -85,51 +85,6 @@ class MateriaController {
     }
 
     // =====================================================
-    // GET /asignaturas/:id/materias
-    // =====================================================
-
-    async obtenerPorAsignatura(req: Request, res: Response) {
-
-        try {
-
-            const idAsignatura = Number(req.params.id);
-
-            if (!Number.isFinite(idAsignatura) || !Number.isInteger(idAsignatura)) {
-                return res.status(400).json({
-                    ok: false,
-                    mensaje: "ID inválido."
-                });
-            }
-
-            const materias = await RepositorioMaterias.obtenerPorAsignatura(idAsignatura);
-
-            return res.json({
-
-                ok: true,
-
-                total: materias.length,
-
-                data: materias
-
-            });
-
-        } catch (error) {
-
-            console.error(error);
-
-            return res.status(500).json({
-
-                ok: false,
-
-                mensaje: "Error del servidor."
-
-            });
-
-        }
-
-    }
-
-    // =====================================================
     // POST /materias
     // =====================================================
 
@@ -145,12 +100,11 @@ class MateriaController {
                 icono,
                 color,
                 orden,
-                id_asignatura,
                 id_docente
 
             } = req.body;
 
-            if (!nombre || !id_asignatura) {
+            if (!nombre || !id_docente) {
 
                 return res.status(400).json({
 
@@ -189,8 +143,6 @@ class MateriaController {
                 color,
 
                 orden,
-
-                id_asignatura,
 
                 id_docente
 

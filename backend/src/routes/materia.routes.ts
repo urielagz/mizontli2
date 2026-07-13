@@ -21,12 +21,6 @@ router.get(
 );
 
 router.get(
-    "/asignatura/:id",
-    authMiddleware,
-    MateriaController.obtenerPorAsignatura
-);
-
-router.get(
     "/:id",
     authMiddleware,
     MateriaController.obtenerPorId
