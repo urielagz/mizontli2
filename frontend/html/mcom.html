@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../css/inicio.css">
+</head>
+
+<body>
+    <div id="menu"></div>
+    <script src="../javascript/menu.js"></script>
+
+<main class="comunidad">
+    <section class="comunidad-header">
+        <div>
+            <h1>Comunidad </h1>
+            <p>Comparte dudas, consejos y experiencias con otros usuarios.</p>
+        </div>
+    </section>
+
+
+    <section class="crear-publicacion">
+        <div class="usuario-publicando">
+            <img src="../img/foto.jpg"
+                 alt="Perfil"
+                 class="foto-perfil">
+            <textarea
+                id="mensaje"
+                placeholder="¿Qué quieres compartir hoy?">
+            </textarea>
+        </div>
+        <div class="acciones-publicacion">
+            <label for="archivo" class="accion">
+                Documento
+            </label>
+            <label for="archivo" class="accion">
+                Imagen
+            </label>
+            <label for="archivo" class="accion">
+                Video
+            </label>
+            <input
+                type="file"
+                id="archivo"
+                hidden
+                accept="image/*,video/*,.pdf,.doc,.docx">
+
+            <button id="btnEnviar">
+                Publicar
+            </button>
+        </div>
+    </section>
+
+
+    <section
+        id="listaPublicaciones"
+        class="lista-publicaciones">
+    </section>
+</main>
+</div>
+
+<script src="../javascript/comunidad.js"></script>
+
+</body>
+</html>

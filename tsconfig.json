@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "CommonJS",
+    "rootDir": "./backend/src",
+    "outDir": "./backend/dist",
+    "strict": false,
+    "esModuleInterop": true,
+    "skipLibCheck": true
+  },
+  "include": ["backend/src/**/*.ts"],
+  "exclude": ["node_modules", "backend/node_modules", "backend/dist", "dist"]
+}

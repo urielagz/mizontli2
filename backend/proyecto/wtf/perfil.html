@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Perfil</title>
+
+    <link rel="stylesheet" href="../uff/inicio.css">
+</head>
+
+<body>
+    <div id="menu"></div>
+
+    <div class="perfil-layout">
+        <div class="perfil-izquierda">
+            <div class="perfil-contenedor">
+                <h1>Mi Perfil</h1>
+
+                <div class="perfil-foto">
+                    <img src="../img/foto.jpg" alt="Foto de perfil">
+                    <button>Cambiar foto</button>
+                </div>
+
+                <div class="perfil-dato">
+                    <label>Nombre</label>
+                    <span class="perfil-texto" id="nombreTexto">nombre</span>
+                    <input type="text"id="nombreInput"class="perfil-input perfil-oculto"value="María López">
+                    <div class="perfil-acciones">
+                        <button class="perfil-editar">O</button>
+                        <button class="perfil-guardar perfil-oculto">V</button>
+                        <button class="perfil-cancelar perfil-oculto">X</button>
+                    </div>
+                </div>
+
+                <div class="perfil-dato">
+                    <label>Correo</label>
+                    <span class="perfil-texto" id="correoTexto">@gmail.com</span>
+                    <input type="email"id="correoInput"class="perfil-input perfil-oculto"value="maria@gmail.com">
+                    <div class="perfil-acciones">
+                        <button class="perfil-editar">O</button>
+                        <button class="perfil-guardar perfil-oculto">V</button>
+                        <button class="perfil-cancelar perfil-oculto">X</button>
+                    </div>
+                </div>
+
+                <div class="perfil-dato">
+                    <label>Escuela</label>
+                    <span class="perfil-texto" id="escuelaTexto">escuela</span>
+                    <input type="text"id="escuelaInput"class="perfil-input perfil-oculto"value="Secundaria Técnica No. 5">
+                    <div class="perfil-acciones">
+                        <button class="perfil-editar">O</button>
+                        <button class="perfil-guardar perfil-oculto">V</button>
+                        <button class="perfil-cancelar perfil-oculto">X</button>
+                    </div>
+                </div>
+
+                <div class="perfil-dato">
+                    <label>Grado</label>
+                    <span class="perfil-texto" id="gradoTexto">grado</span>
+                    <select id="gradoInput"class="perfil-input perfil-oculto">
+                        <option>Primero</option>
+                        <option selected>grado</option>
+                        <option>Tercero</option>
+                    </select>
+
+                    <div class="perfil-acciones">
+                        <button class="perfil-editar">O</button>
+                        <button class="perfil-guardar perfil-oculto">V</button>
+                        <button class="perfil-cancelar perfil-oculto">X</button>
+                    </div>
+                </div>
+
+
+                <div class="perfil-dato">
+                    <label>Grupo</label>
+                    <span class="perfil-texto" id="grupoTexto">grupo</span>
+                    <select id="grupoInput"class="perfil-input perfil-oculto">
+                        <option>A</option>
+                        <option selected>grupo</option>
+                        <option>C</option>
+                        <option>D</option>
+                    </select>
+
+                    <div class="perfil-acciones">
+                        <button class="perfil-editar">O</button>
+                        <button class="perfil-guardar perfil-oculto">V</button>
+                        <button class="perfil-cancelar perfil-oculto">X</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="perfil-derecha">
+            <div class="perfil-promedio">
+                <h2>Promedio General</h2>
+                <div class="perfil-circulo">00</div>
+            </div>
+
+            <div class="perfil-materias">
+                <h2>Mis Materias</h2>
+                <table class="perfil-tabla">
+                    <tr>
+                        <th>Materia</th>
+                        <th>Promedio</th>
+                    </tr>
+                    <tr>
+                        <td>Matemáticas</td>
+                        <td>9.8</td>
+                    </tr>
+                    <tr>
+                        <td>Español</td>
+                        <td>9.3</td>
+                    </tr>
+                    <tr>
+                        <td>Ciencias</td>
+                        <td>9.7</td>
+                    </tr>
+                    <tr>
+                        <td>Historia</td>
+                        <td>8.9</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="../jsjs/perfil.js"></script>
+    <script src="../jsjs/menu.js"></script>
+
+</body>
+</html>

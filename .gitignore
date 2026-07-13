@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.env
+.DS_Store
+*.log
+.vscode/
+
+# Archivos subidos por usuarios en pruebas locales (se regeneran en runtime)
+backend/uploads/
+
+# Archivos pesados que no deben ir al repo
+*.zip
+*.bak
