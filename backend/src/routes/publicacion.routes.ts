@@ -16,7 +16,7 @@ propiedad vive dentro del controller, según el rol)
 router.post(
     "/",
     authMiddleware,
-    uploadComunidad.array("archivos", 10),
+    uploadComunidad.array("archivos", 5),
     PublicacionController.crear
 );
 

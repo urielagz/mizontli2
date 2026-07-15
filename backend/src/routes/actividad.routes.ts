@@ -43,7 +43,7 @@ router.post(
     "/",
     authMiddleware,
     permitirRoles("docente", "admin"),
-    uploadActividadApoyo.array("archivos_apoyo", 10),
+    uploadActividadApoyo.array("archivos_apoyo", 5),
     ActividadController.crear
 );
 
@@ -51,7 +51,7 @@ router.put(
     "/:id",
     authMiddleware,
     permitirRoles("docente", "admin"),
-    uploadActividadApoyo.array("archivos_apoyo", 10),
+    uploadActividadApoyo.array("archivos_apoyo", 5),
     ActividadController.actualizar
 );
 

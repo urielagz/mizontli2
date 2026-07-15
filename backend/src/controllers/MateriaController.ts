@@ -4,6 +4,7 @@ import { RepositorioTemas } from "../repositories/RepositorioTemas";
 import { repos } from "../repositories";
 import { enviarCorreo } from "../config/mailer";
 import { notificarMateria, correoMateria } from "../utils/notificaciones";
+import RepositorioChat from "../repositories/RepositorioChat";
 
 const repoTemas = new RepositorioTemas();
 
@@ -99,12 +100,17 @@ class MateriaController {
             const {
 
                 nombre,
-                icono,
                 color,
                 orden,
                 id_docente
 
             } = req.body;
+
+            // Si mandan un archivo (campo "icono"), esa imagen manda sobre
+            // cualquier texto que también hayan puesto en icono -- el
+            // ícono real de la materia es el archivo subido.
+            const archivo = req.file as Express.Multer.File | undefined;
+            const icono = archivo ? `materias/${archivo.filename}` : req.body.icono;
 
             if (!nombre || !id_docente) {
 
@@ -149,6 +155,27 @@ class MateriaController {
                 id_docente
 
             });
+
+            // El chat privado de la materia se crea junto con ella -- el
+            // docente ya no tiene que crearlo aparte con POST /chats. Los
+            // alumnos entran solos en cuanto se inscriben (la membresía
+            // se calcula en vivo contra usuario_materia, no hace falta
+            // agregarlos a mano). Best-effort: si falla, la materia ya
+            // quedó creada y el docente puede crear el chat manualmente
+            // después con POST /chats.
+            try {
+
+                await RepositorioChat.crearGrupoMateria(
+                    materia.id_materia,
+                    Number(id_docente),
+                    materia.nombre
+                );
+
+            } catch (errorChat) {
+
+                console.error("No se pudo crear el chat de la materia:", errorChat);
+
+            }
 
             // El docente recibe el token de inscripción por correo -- es
             // best-effort: si el envío falla, la materia ya quedó creada
@@ -213,9 +240,9 @@ class MateriaController {
 
             const usuario = req.usuario;
 
-            const existe = await RepositorioMaterias.existe(id);
+            const materiaExistente = await RepositorioMaterias.obtenerPorId(id);
 
-            if (!existe) {
+            if (!materiaExistente) {
 
                 return res.status(404).json({
 
@@ -248,7 +275,24 @@ class MateriaController {
 
             }
 
-            const materia = await RepositorioMaterias.actualizar(id, req.body);
+            const { nombre, color, orden } = req.body;
+
+            // Si suben un archivo nuevo (campo "icono"), reemplaza el
+            // ícono; si no, conserva el que ya tenía -- mismo patrón que
+            // TemaController.actualizarContenido con imagen1/imagen2. El
+            // resto de los campos también conserva su valor actual si no
+            // se mandan, para poder actualizar solo el ícono sin tener
+            // que reenviar nombre/color/orden.
+            const archivo = req.file as Express.Multer.File | undefined;
+            const icono = archivo ? `materias/${archivo.filename}` : (req.body.icono ?? materiaExistente.icono);
+
+            const materia = await RepositorioMaterias.actualizar(id, {
+                nombre: nombre ?? materiaExistente.nombre,
+                icono,
+                color: color ?? materiaExistente.color,
+                orden: orden !== undefined ? Number(orden) : materiaExistente.orden,
+                id_docente: materiaExistente.id_docente
+            });
 
             return res.json({
 

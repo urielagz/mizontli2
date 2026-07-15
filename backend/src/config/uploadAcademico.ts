@@ -11,6 +11,7 @@ const ACTIVIDADES_PATH = path.join(process.env.UPLOADS_PATH || "uploads", "activ
 const COMUNIDAD_PATH = path.join(process.env.UPLOADS_PATH || "uploads", "comunidad");
 const TEMA_PATH = path.join(process.env.UPLOADS_PATH || "uploads", "temas");
 const CHAT_PATH = path.join(process.env.UPLOADS_PATH || "uploads", "chat");
+const MATERIA_PATH = path.join(process.env.UPLOADS_PATH || "uploads", "materias");
 
 for (const ruta of [
     RECURSOS_PATH,
@@ -18,7 +19,8 @@ for (const ruta of [
     ACTIVIDADES_PATH,
     COMUNIDAD_PATH,
     TEMA_PATH,
-    CHAT_PATH
+    CHAT_PATH,
+    MATERIA_PATH
 ]) {
     if (!fs.existsSync(ruta)) {
         fs.mkdirSync(ruta, { recursive: true });
@@ -112,27 +114,28 @@ export const uploadChat = multer({
     fileFilter: filtroArchivos,
 });
 
+function filtroImagenes(_req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) {
+    const ext = path.extname(file.originalname).toLowerCase();
+    const permitidas = [".jpg", ".jpeg", ".png", ".webp"];
+
+    if (permitidas.includes(ext)) {
+        cb(null, true);
+    } else {
+        cb(new Error("Solo se permiten imágenes JPG, JPEG, PNG o WEBP."));
+    }
+}
+
 export const uploadImagenesTema = multer({
     storage: crearStorage(TEMA_PATH),
     limits: { fileSize: 5 * 1024 * 1024 },
-    fileFilter: (_req, file, cb) => {
-        const ext = path.extname(file.originalname).toLowerCase();
+    fileFilter: filtroImagenes,
+});
 
-        const permitidas = [
-            ".jpg",
-            ".jpeg",
-            ".png",
-            ".webp"
-        ];
-
-        if (permitidas.includes(ext)) {
-            cb(null, true);
-        } else {
-            cb(new Error(
-                "Solo se permiten imágenes JPG, JPEG, PNG o WEBP."
-            ));
-        }
-    },
+// Ícono de una materia (un solo archivo, campo "icono").
+export const uploadIconoMateria = multer({
+    storage: crearStorage(MATERIA_PATH),
+    limits: { fileSize: 5 * 1024 * 1024 },
+    fileFilter: filtroImagenes,
 });
 
 export function clasificarTipo(extension: string): string {

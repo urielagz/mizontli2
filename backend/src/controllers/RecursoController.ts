@@ -10,6 +10,22 @@ import { notificarMateria } from "../utils/notificaciones";
 const repoTemas = new RepositorioTemas();
 const MAX_ARCHIVOS_RECURSO = 5;
 
+// Función suelta (no método de clase) a propósito: las rutas invocan
+// "RecursoController.crear" como referencia de función, sin el objeto
+// receptor -- un método normal (no arrow) perdería su "this" ahí y
+// "this.mapearArchivo" tronaría con "Cannot read properties of undefined".
+function mapearArchivo(archivo: Express.Multer.File): ArchivoRecurso {
+    const extension = path.extname(archivo.originalname);
+
+    return {
+        url: `recursos/${archivo.filename}`,
+        nombre_original: archivo.originalname,
+        tipo: clasificarTipo(extension) as any,
+        extension,
+        tamano_bytes: archivo.size
+    };
+}
+
 class RecursoController {
 
     // =====================================================
@@ -120,7 +136,7 @@ class RecursoController {
             const recurso = await RepositorioRecursos.crear({
                 titulo,
                 descripcion,
-                archivos: archivos.map(archivo => this.mapearArchivo(archivo)),
+                archivos: archivos.map(archivo => mapearArchivo(archivo)),
                 id_tema: Number(id_tema),
                 id_usuario: usuario.id
             });
@@ -184,7 +200,7 @@ class RecursoController {
             }
 
             const archivos = archivosNuevos.length > 0
-                ? [...archivosActuales, ...archivosNuevos.map(archivo => this.mapearArchivo(archivo))]
+                ? [...archivosActuales, ...archivosNuevos.map(archivo => mapearArchivo(archivo))]
                 : undefined;
 
             const actualizado = await RepositorioRecursos.actualizar(id, titulo, descripcion, archivos);
@@ -296,18 +312,6 @@ class RecursoController {
                 res.status(500).json({ ok: false, mensaje: "Error del servidor." });
             }
         }
-    }
-
-    private mapearArchivo(archivo: Express.Multer.File): ArchivoRecurso {
-        const extension = path.extname(archivo.originalname);
-
-        return {
-            url: `recursos/${archivo.filename}`,
-            nombre_original: archivo.originalname,
-            tipo: clasificarTipo(extension) as any,
-            extension,
-            tamano_bytes: archivo.size
-        };
     }
 
 }

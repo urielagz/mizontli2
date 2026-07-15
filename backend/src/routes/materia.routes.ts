@@ -4,6 +4,7 @@ import MateriaController from "../controllers/MateriaController";
 
 import { authMiddleware } from "../middlewares/authMiddleware";
 import { permitirRoles } from "../middlewares/rolesMiddleware";
+import { uploadIconoMateria } from "../config/uploadAcademico";
 
 const router = Router();
 
@@ -54,6 +55,7 @@ router.post(
     "/",
     authMiddleware,
     permitirRoles("docente", "admin"),
+    uploadIconoMateria.single("icono"),
     MateriaController.crear
 );
 
@@ -61,6 +63,7 @@ router.put(
     "/:id",
     authMiddleware,
     permitirRoles("docente", "admin"),
+    uploadIconoMateria.single("icono"),
     MateriaController.actualizar
 );
 
