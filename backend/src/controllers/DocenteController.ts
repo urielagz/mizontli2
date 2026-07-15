@@ -57,13 +57,20 @@ export class DocenteController {
                      Tu cédula y diploma están en revisión. Te avisaremos por este medio cuando sea aprobada.</p>`
                 );
 
-                // Notificación al admin
+                // Notificación al admin -- con la cédula y el diploma adjuntos de
+                // verdad (antes el correo solo decía "revisa el panel" sin mandar
+                // nada, y no había forma práctica de verlos sin conocer de
+                // antemano el nombre del archivo en disco).
                 await enviarCorreo(
                     process.env.ADMIN_EMAIL as string,
                     "Nueva solicitud de docente pendiente",
                     `<p>${nombre} ${apellido} (${correo}) solicitó registrarse como docente.</p>
                      <p>ID de solicitud: ${solicitud.id_solicitud}</p>
-                     <p>Revisa la cédula y el diploma en el panel de administración antes de aprobar.</p>`
+                     <p>Se adjuntan su cédula profesional y su diploma.</p>`,
+                    [
+                        { filename: `cedula_${archivos.cedula_profesional[0].originalname}`, path: archivos.cedula_profesional[0].path },
+                        { filename: `diploma_${archivos.diploma[0].originalname}`, path: archivos.diploma[0].path }
+                    ]
                 );
             } catch (errorCorreo) {
                 console.error("No se pudo enviar el correo de solicitud de docente:", errorCorreo);
