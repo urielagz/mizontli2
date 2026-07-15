@@ -1,5 +1,5 @@
 import { pool } from "../config/database";
-import { Recurso } from "../models/Recurso";
+import { Recurso, ArchivoRecurso } from "../models/Recurso";
 
 class RepositorioRecursos {
 
@@ -39,19 +39,15 @@ class RepositorioRecursos {
 
         const sql = `
             INSERT INTO Recurso
-            (titulo, descripcion, tipo, url_archivo, nombre_original, extension, tamano_bytes, id_tema, id_usuario)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            (titulo, descripcion, archivos, id_tema, id_usuario)
+            VALUES ($1, $2, $3, $4, $5)
             RETURNING *;
         `;
 
         const values = [
             recurso.titulo,
             recurso.descripcion ?? null,
-            recurso.tipo,
-            recurso.url_archivo,
-            recurso.nombre_original ?? null,
-            recurso.extension ?? null,
-            recurso.tamano_bytes ?? null,
+            JSON.stringify(recurso.archivos ?? []),
             recurso.id_tema,
             recurso.id_usuario
         ];
@@ -62,18 +58,33 @@ class RepositorioRecursos {
     }
 
     // ==========================
-    // Actualizar (solo metadatos, no el archivo)
+    // Actualizar (metadatos y, opcionalmente, la lista de archivos)
     // ==========================
-    async actualizar(id: number, titulo: string, descripcion: string): Promise<Recurso | null> {
+    async actualizar(
+        id: number,
+        titulo: string,
+        descripcion: string,
+        archivos?: ArchivoRecurso[]
+    ): Promise<Recurso | null> {
 
         const sql = `
             UPDATE Recurso
-            SET titulo = $1, descripcion = $2
-            WHERE id_recurso = $3
+            SET
+                titulo = $1,
+                descripcion = $2,
+                archivos = COALESCE($3, archivos)
+            WHERE id_recurso = $4
             RETURNING *;
         `;
 
-        const { rows } = await pool.query(sql, [titulo, descripcion, id]);
+        const values = [
+            titulo,
+            descripcion,
+            archivos ? JSON.stringify(archivos) : null,
+            id
+        ];
+
+        const { rows } = await pool.query(sql, values);
 
         return rows.length ? rows[0] : null;
     }

@@ -1,17 +1,28 @@
+// Debe coincidir con las categorías que devuelve clasificarTipo() en
+// config/uploadAcademico.ts.
 export type TipoRecurso =
-    | "informacion"
-    | "documento"
-    | "video"
-    | "enlace"
     | "pdf"
-    | "word"
-    | "excel"
-    | "powerpoint"
+    | "documento"
+    | "presentacion"
+    | "hoja_calculo"
     | "imagen"
     | "audio"
-    | "zip"
-    | "rar"
+    | "video"
+    | "comprimido"
+    | "codigo"
+    | "diseno"
+    | "modelo_3d"
     | "otro";
+
+// Archivo adjunto a un recurso (mismo patrón que ArchivoApoyo de Actividad
+// y ArchivoPublicacion de Comunidad). Un recurso admite hasta 5.
+export interface ArchivoRecurso {
+    url: string;
+    nombre_original: string;
+    tipo: TipoRecurso;
+    extension?: string;
+    tamano_bytes?: number;
+}
 
 export interface Recurso {
 
@@ -21,15 +32,7 @@ export interface Recurso {
 
     descripcion?: string;
 
-    tipo: TipoRecurso;
-
-    url_archivo: string;
-
-    nombre_original?: string;
-
-    extension?: string;
-
-    tamano_bytes?: number;
+    archivos: ArchivoRecurso[];
 
     fecha_publicacion?: Date;
 

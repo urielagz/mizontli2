@@ -1,6 +1,15 @@
 import { pool } from "../config/database";
 import { Actividad, EntregaActividad } from "../models/Actividad";
 
+// Mismo default que la columna actividad.archivos_permitidos en
+// database.sql. Se necesita duplicado acá porque un NULL explícito en el
+// INSERT/UPDATE pisa el DEFAULT de Postgres en vez de dejarlo actuar.
+// Son categorías (las mismas que devuelve clasificarTipo() en
+// config/uploadAcademico.ts), no extensiones sueltas -- por defecto se
+// permiten todas.
+const ARCHIVOS_PERMITIDOS_DEFAULT =
+    "pdf,documento,presentacion,hoja_calculo,imagen,audio,video,comprimido,codigo,diseno,modelo_3d";
+
 class RepositorioActividades {
 
     // ==========================
@@ -49,7 +58,7 @@ class RepositorioActividades {
             actividad.descripcion ?? null,
             actividad.fecha_limite ?? null,
             actividad.puntaje ?? 10,
-            actividad.archivos_permitidos ?? null,
+            actividad.archivos_permitidos ?? ARCHIVOS_PERMITIDOS_DEFAULT,
             JSON.stringify(actividad.archivos_apoyo ?? []),
             actividad.id_tema,
             actividad.id_docente ?? null
@@ -80,7 +89,7 @@ class RepositorioActividades {
             datos.descripcion ?? null,
             datos.fecha_limite ?? null,
             datos.puntaje ?? 10,
-            datos.archivos_permitidos ?? null,
+            datos.archivos_permitidos ?? ARCHIVOS_PERMITIDOS_DEFAULT,
             JSON.stringify(datos.archivos_apoyo ?? []),
             id
         ];
@@ -136,13 +145,12 @@ class RepositorioActividades {
 
         const sql = `
             INSERT INTO actividad_completada
-            (id_usuario, id_actividad, fecha_entrega, archivo_url, nombre_original, url_entrega, comentario_alumno)
-            VALUES ($1, $2, NOW(), $3, $4, $5, $6)
+            (id_usuario, id_actividad, fecha_entrega, archivos, url_entrega, comentario_alumno)
+            VALUES ($1, $2, NOW(), $3, $4, $5)
             ON CONFLICT (id_usuario, id_actividad)
             DO UPDATE SET
                 fecha_entrega = NOW(),
-                archivo_url = EXCLUDED.archivo_url,
-                nombre_original = EXCLUDED.nombre_original,
+                archivos = EXCLUDED.archivos,
                 url_entrega = EXCLUDED.url_entrega,
                 comentario_alumno = EXCLUDED.comentario_alumno,
                 calificacion = NULL,
@@ -153,8 +161,7 @@ class RepositorioActividades {
         const values = [
             entrega.id_usuario,
             entrega.id_actividad,
-            entrega.archivo_url ?? null,
-            entrega.nombre_original ?? null,
+            JSON.stringify(entrega.archivos ?? []),
             entrega.url_entrega ?? null,
             entrega.comentario_alumno ?? null
         ];
@@ -199,6 +206,25 @@ class RepositorioActividades {
         const { rows } = await pool.query("SELECT * FROM actividad_completada WHERE id_registro = $1", [idRegistro]);
 
         return rows.length ? rows[0] : null;
+    }
+
+    // La entrega de un alumno es única por (id_usuario, id_actividad) --
+    // así el alumno la busca sin necesitar el id_registro.
+    async obtenerEntregaDeAlumno(idUsuario: number, idActividad: number): Promise<EntregaActividad | null> {
+
+        const { rows } = await pool.query(
+            "SELECT * FROM actividad_completada WHERE id_usuario = $1 AND id_actividad = $2",
+            [idUsuario, idActividad]
+        );
+
+        return rows.length ? rows[0] : null;
+    }
+
+    async eliminarEntrega(idRegistro: number): Promise<boolean> {
+
+        const result = await pool.query("DELETE FROM actividad_completada WHERE id_registro = $1;", [idRegistro]);
+
+        return result.rowCount !== null && result.rowCount > 0;
     }
 
     async calificar(idRegistro: number, calificacion: number, observaciones_docente: string): Promise<EntregaActividad | null> {

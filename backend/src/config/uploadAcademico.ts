@@ -5,30 +5,51 @@ import fs from "fs";
 // Multer dedicado al módulo académico (recursos de un tema y entregas de
 // actividades). No comparte configuración con config/upload.ts, que es el
 // usado por el flujo de solicitud de docentes (sistema de usuarios).
-
 const RECURSOS_PATH = path.join(process.env.UPLOADS_PATH || "uploads", "recursos");
 const ENTREGAS_PATH = path.join(process.env.UPLOADS_PATH || "uploads", "entregas");
 const ACTIVIDADES_PATH = path.join(process.env.UPLOADS_PATH || "uploads", "actividades");
+const COMUNIDAD_PATH = path.join(process.env.UPLOADS_PATH || "uploads", "comunidad");
+const TEMA_PATH = path.join(process.env.UPLOADS_PATH || "uploads", "temas");
+const CHAT_PATH = path.join(process.env.UPLOADS_PATH || "uploads", "chat");
 
-for (const ruta of [RECURSOS_PATH, ENTREGAS_PATH, ACTIVIDADES_PATH]) {
+for (const ruta of [
+    RECURSOS_PATH,
+    ENTREGAS_PATH,
+    ACTIVIDADES_PATH,
+    COMUNIDAD_PATH,
+    TEMA_PATH,
+    CHAT_PATH
+]) {
     if (!fs.existsSync(ruta)) {
         fs.mkdirSync(ruta, { recursive: true });
     }
 }
 
+// Comparte esta lista uploadRecurso, uploadEntrega, uploadActividadApoyo
+// y uploadComunidad (recursos, entregas de actividades, archivos de
+// apoyo de actividades y adjuntos de publicaciones de la comunidad) --
+// un solo cambio aquí actualiza los 4 flujos de subida.
 const EXTENSIONES_PERMITIDAS = [
     // documentos
-    ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".txt", ".csv", ".odt", ".ods", ".odp",
+    ".pdf", ".doc", ".docx", ".txt", ".rtf", ".odt", ".epub", ".mobi",
+    // presentaciones
+    ".ppt", ".pptx", ".odp", ".key",
+    // hojas de cálculo
+    ".xls", ".xlsx", ".csv", ".ods",
     // imágenes
-    ".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg",
-    // video
-    ".mp4", ".mov", ".avi", ".mkv", ".webm",
+    ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp", ".svg",
     // audio
-    ".mp3", ".wav", ".ogg",
+    ".mp3", ".wav", ".ogg", ".m4a", ".aac",
+    // video
+    ".mp4", ".avi", ".mov", ".wmv", ".mkv", ".webm",
     // comprimidos
-    ".zip", ".rar",
+    ".zip", ".rar", ".7z", ".tar", ".gz",
     // código
-    ".js", ".ts", ".py", ".java", ".c", ".cpp", ".html", ".css", ".json"
+    ".java", ".py", ".cpp", ".c", ".cs", ".js", ".ts", ".html", ".css", ".php", ".sql", ".json", ".xml",
+    // diseño
+    ".psd", ".ai", ".fig", ".xd",
+    // modelos 3D
+    ".stl", ".obj", ".fbx"
 ];
 
 function crearStorage(destino: string) {
@@ -76,18 +97,58 @@ export const uploadActividadApoyo = multer({
     fileFilter: filtroArchivos,
 });
 
+// Fotos/videos/documentos adjuntos a una publicación de la comunidad
+// (opcionales, pueden ser varios).
+export const uploadComunidad = multer({
+    storage: crearStorage(COMUNIDAD_PATH),
+    limits: { fileSize: 25 * 1024 * 1024 }, // 25MB
+    fileFilter: filtroArchivos,
+});
+
+// Archivos adjuntos a un mensaje de chat (público o de materia).
+export const uploadChat = multer({
+    storage: crearStorage(CHAT_PATH),
+    limits: { fileSize: 25 * 1024 * 1024 }, // 25MB
+    fileFilter: filtroArchivos,
+});
+
+export const uploadImagenesTema = multer({
+    storage: crearStorage(TEMA_PATH),
+    limits: { fileSize: 5 * 1024 * 1024 },
+    fileFilter: (_req, file, cb) => {
+        const ext = path.extname(file.originalname).toLowerCase();
+
+        const permitidas = [
+            ".jpg",
+            ".jpeg",
+            ".png",
+            ".webp"
+        ];
+
+        if (permitidas.includes(ext)) {
+            cb(null, true);
+        } else {
+            cb(new Error(
+                "Solo se permiten imágenes JPG, JPEG, PNG o WEBP."
+            ));
+        }
+    },
+});
+
 export function clasificarTipo(extension: string): string {
     const ext = extension.toLowerCase().replace(".", "");
 
     if (ext === "pdf") return "pdf";
-    if (["doc", "docx", "odt"].includes(ext)) return "word";
-    if (["xls", "xlsx", "ods"].includes(ext)) return "excel";
-    if (["ppt", "pptx", "odp"].includes(ext)) return "powerpoint";
-    if (["jpg", "jpeg", "png", "gif", "webp", "svg"].includes(ext)) return "imagen";
-    if (["mp4", "mov", "avi", "mkv", "webm"].includes(ext)) return "video";
-    if (["mp3", "wav", "ogg"].includes(ext)) return "audio";
-    if (ext === "zip") return "zip";
-    if (ext === "rar") return "rar";
+    if (["doc", "docx", "txt", "rtf", "odt", "epub", "mobi"].includes(ext)) return "documento";
+    if (["ppt", "pptx", "odp", "key"].includes(ext)) return "presentacion";
+    if (["xls", "xlsx", "csv", "ods"].includes(ext)) return "hoja_calculo";
+    if (["jpg", "jpeg", "png", "gif", "bmp", "webp", "svg"].includes(ext)) return "imagen";
+    if (["mp3", "wav", "ogg", "m4a", "aac"].includes(ext)) return "audio";
+    if (["mp4", "avi", "mov", "wmv", "mkv", "webm"].includes(ext)) return "video";
+    if (["zip", "rar", "7z", "tar", "gz"].includes(ext)) return "comprimido";
+    if (["java", "py", "cpp", "c", "cs", "js", "ts", "html", "css", "php", "sql", "json", "xml"].includes(ext)) return "codigo";
+    if (["psd", "ai", "fig", "xd"].includes(ext)) return "diseno";
+    if (["stl", "obj", "fbx"].includes(ext)) return "modelo_3d";
 
     return "otro";
 }

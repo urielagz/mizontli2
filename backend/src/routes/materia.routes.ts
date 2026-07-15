@@ -1,7 +1,6 @@
 import { Router } from "express";
 
 import MateriaController from "../controllers/MateriaController";
-import ExamenFinalController from "../controllers/ExamenFinalController";
 
 import { authMiddleware } from "../middlewares/authMiddleware";
 import { permitirRoles } from "../middlewares/rolesMiddleware";
@@ -34,28 +33,15 @@ router.get(
 
 /*
 ==================================
-EXAMEN FINAL (uno por materia, solo un link a Google Forms)
+INSCRIPCIÓN (alumno se inscribe con el token que recibió el docente)
 ==================================
 */
 
-router.get(
-    "/:id/examen",
-    authMiddleware,
-    ExamenFinalController.obtenerPorMateria
-);
-
 router.post(
-    "/:id/examen",
+    "/inscribirse",
     authMiddleware,
-    permitirRoles("docente", "admin"),
-    ExamenFinalController.guardar
-);
-
-router.delete(
-    "/:id/examen",
-    authMiddleware,
-    permitirRoles("docente", "admin"),
-    ExamenFinalController.eliminar
+    permitirRoles("alumno"),
+    MateriaController.inscribirse
 );
 
 /*
@@ -83,6 +69,13 @@ router.delete(
     authMiddleware,
     permitirRoles("docente", "admin"),
     MateriaController.eliminar
+);
+
+router.post(
+    "/:id/aviso",
+    authMiddleware,
+    permitirRoles("docente", "admin"),
+    MateriaController.avisoImportante
 );
 
 export default router;

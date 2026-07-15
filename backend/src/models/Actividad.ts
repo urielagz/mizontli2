@@ -26,7 +26,16 @@ export interface Actividad {
 
 }
 
+// Archivo adjunto a una entrega de alumno (mismo patrón que ArchivoApoyo).
+export interface ArchivoEntrega {
+    url: string;
+    nombre_original: string;
+}
+
 // Entrega de un alumno para una actividad (tabla actividad_completada).
+// El alumno entrega vía archivos (hasta 5), texto y/o una URL (ej. un
+// enlace a Drive o un video) -- se exige al menos una de las tres, pero
+// ninguna es obligatoria por sí sola.
 export interface EntregaActividad {
 
     id_registro?: number;
@@ -35,9 +44,7 @@ export interface EntregaActividad {
 
     id_actividad: number;
 
-    archivo_url?: string;
-
-    nombre_original?: string;
+    archivos?: ArchivoEntrega[];
 
     url_entrega?: string;
 

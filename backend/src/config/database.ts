@@ -1,15 +1,15 @@
 import { Pool } from "pg";
 
 // El esquema del módulo académico (Materia, Tema, Recurso, Actividad,
-// ExamenFinal) vive en database/schema.sql (base nueva) o
-// database/migrations/migrations_completo.sql (base existente). Aplica el
-// que corresponda antes de usar las rutas /materias, /temas, /recursos,
-// /actividades y /calificaciones.
+// Examen, inscripción vía usuario_materia) vive en
+// backend/database/database.sql. Aplícalo manualmente antes de usar las
+// rutas /materias, /temas, /recursos, /actividades, /examenes y
+// /calificaciones.
 
 export const pool = new Pool({
     host: "localhost",
     port: 5432,
-    database: "prueba3",
+    database: "prueba5",
     user: "postgres",
     password: "12345"
 });

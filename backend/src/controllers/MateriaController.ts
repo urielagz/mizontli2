@@ -1,7 +1,9 @@
 import { Request, Response } from "express";
 import RepositorioMaterias from "../repositories/RepositorioMateria";
 import { RepositorioTemas } from "../repositories/RepositorioTemas";
-import RepositorioExamenFinal from "../repositories/RepositorioExamenFinal";
+import { repos } from "../repositories";
+import { enviarCorreo } from "../config/mailer";
+import { notificarMateria, correoMateria } from "../utils/notificaciones";
 
 const repoTemas = new RepositorioTemas();
 
@@ -148,11 +150,36 @@ class MateriaController {
 
             });
 
+            // El docente recibe el token de inscripción por correo -- es
+            // best-effort: si el envío falla, la materia ya quedó creada
+            // y no debe tumbar la respuesta.
+            try {
+
+                const docente = await repos.usuarios.buscarPorId(Number(id_docente));
+
+                if (docente) {
+
+                    await enviarCorreo(
+                        docente.correo,
+                        `Token de inscripción para "${materia.nombre}" - Miztontli`,
+                        `<p>Hola ${docente.nombre}, creaste la materia <strong>${materia.nombre}</strong>.</p>
+                         <p>Comparte este token con tus alumnos para que se inscriban:</p>
+                         <p style="font-size:20px;"><strong>${materia.token}</strong></p>`
+                    );
+
+                }
+
+            } catch (errorCorreo) {
+
+                console.error("No se pudo enviar el correo del token de materia:", errorCorreo);
+
+            }
+
             return res.status(201).json({
 
                 ok: true,
 
-                mensaje: "Materia creada correctamente.",
+                mensaje: "Materia creada correctamente. Se envió el token de inscripción al correo del docente.",
 
                 data: materia
 
@@ -322,15 +349,17 @@ class MateriaController {
 
     // =====================================================
     // GET /materias/:id/indice
-    // Navegación de la materia: temas ordenados + examen final.
-    // No almacena nada, solo compone lo que ya existe.
+    // Navegación de la materia: temas ordenados, con indicador de si
+    // cada uno tiene actividades y/o exámenes. No almacena nada, solo
+    // compone lo que ya existe.
     // =====================================================
 
-    async obtenerIndice(req: Request, res: Response) {
+    async obtenerIndice(req: any, res: Response) {
 
         try {
 
             const id = Number(req.params.id);
+            const usuario = req.usuario;
 
             if (!Number.isInteger(id)) {
                 return res.status(400).json({ ok: false, mensaje: "ID inválido." });
@@ -342,12 +371,19 @@ class MateriaController {
                 return res.status(404).json({ ok: false, mensaje: "Materia no encontrada." });
             }
 
+            if (usuario.rol === "alumno") {
+                const inscrito = await RepositorioMaterias.estaInscrito(usuario.id, id);
+
+                if (!inscrito) {
+                    return res.status(403).json({ ok: false, mensaje: "No estás inscrito en esta materia." });
+                }
+            }
+
             const temas = await repoTemas.buscarIndicePorMateria(id);
-            const examenFinal = await RepositorioExamenFinal.obtenerPorMateria(id);
 
             return res.json({
                 ok: true,
-                data: { temas, examenFinal }
+                data: { temas }
             });
 
         } catch (error) {
@@ -355,6 +391,119 @@ class MateriaController {
             console.error(error);
 
             return res.status(500).json({ ok: false, mensaje: "Error del servidor." });
+
+        }
+
+    }
+
+    // =====================================================
+    // POST /materias/inscribirse  (alumno)
+    // El alumno manda el token que le compartió su docente y queda
+    // inscrito en esa materia. Sin inscripción no puede ver el índice,
+    // los temas, recursos, actividades ni exámenes de la materia.
+    // =====================================================
+
+    async inscribirse(req: any, res: Response) {
+
+        try {
+
+            const usuario = req.usuario;
+            const { token } = req.body;
+
+            if (!token || String(token).trim() === "") {
+                return res.status(400).json({ ok: false, mensaje: "Debes ingresar el token de la materia." });
+            }
+
+            const materia = await RepositorioMaterias.buscarPorToken(String(token).trim().toUpperCase());
+
+            if (!materia) {
+                return res.status(404).json({ ok: false, mensaje: "Token inválido. Verifica que esté bien escrito." });
+            }
+
+            const yaInscrito = await RepositorioMaterias.estaInscrito(usuario.id, materia.id_materia);
+
+            if (yaInscrito) {
+                return res.status(409).json({ ok: false, mensaje: "Ya estás inscrito en esta materia." });
+            }
+
+            await RepositorioMaterias.inscribir(usuario.id, materia.id_materia);
+
+            return res.status(201).json({
+                ok: true,
+                mensaje: `Te inscribiste correctamente a "${materia.nombre}".`,
+                data: materia
+            });
+
+        } catch (error) {
+
+            console.error(error);
+
+            return res.status(500).json({ ok: false, mensaje: "No fue posible completar la inscripción." });
+
+        }
+
+    }
+
+    // =====================================================
+    // POST /materias/:id/aviso  (docente/admin)
+    // "Aviso importante": a diferencia de una publicación normal de la
+    // Comunidad, esto SIEMPRE genera notificación in-app (tipo "aviso")
+    // Y correo a todos los inscritos, de una sola vez -- pensado para
+    // avisos que el docente quiere asegurarse de que todos vean (cambio
+    // de fecha de examen, instrucciones urgentes, etc.), no para el feed
+    // de preguntas/respuestas del día a día.
+    // =====================================================
+
+    async avisoImportante(req: any, res: Response) {
+
+        try {
+
+            const id = Number(req.params.id);
+            const usuario = req.usuario;
+            const { titulo, mensaje } = req.body;
+
+            if (!Number.isInteger(id)) {
+                return res.status(400).json({ ok: false, mensaje: "ID inválido." });
+            }
+
+            if (!titulo || !mensaje) {
+                return res.status(400).json({ ok: false, mensaje: "El título y el mensaje son obligatorios." });
+            }
+
+            const materia = await RepositorioMaterias.obtenerPorId(id);
+
+            if (!materia) {
+                return res.status(404).json({ ok: false, mensaje: "Materia no encontrada." });
+            }
+
+            if (usuario.rol === "docente") {
+                const propietario = await RepositorioMaterias.esDelDocente(id, usuario.id);
+
+                if (!propietario) {
+                    return res.status(403).json({ ok: false, mensaje: "No puedes enviar avisos en una materia que no es tuya." });
+                }
+            }
+
+            await notificarMateria(id, "aviso", titulo, mensaje);
+
+            await correoMateria(
+                id,
+                `Aviso importante: ${titulo} - Miztontli`,
+                (alumno) => `<p>Hola ${alumno.nombre}, tu docente envió un aviso importante en "${materia.nombre}".</p>
+                             <p><strong>${titulo}</strong></p>
+                             <p>${mensaje}</p>`
+            );
+
+            return res.status(201).json({
+                ok: true,
+                mensaje: "Aviso enviado a todos los alumnos inscritos (notificación y correo)."
+            });
+
+        } catch (error) {
+
+            console.error(error);
+
+            return res.status(500).json({ ok: false, mensaje: "No fue posible enviar el aviso." });
 
         }
 

@@ -1,37 +1,29 @@
 import { Router } from "express";
 
-import RecursoController from "../controllers/RecursoController";
+import ExamenController from "../controllers/ExamenController";
 
 import { authMiddleware } from "../middlewares/authMiddleware";
 import { permitirRoles } from "../middlewares/rolesMiddleware";
-import { uploadRecurso } from "../config/uploadAcademico";
 
 const router = Router();
 
 /*
 ==========================================
-CONSULTAS (todos los roles autenticados)
+CONSULTAS (todos los roles autenticados; el alumno debe estar inscrito
+en la materia del tema -- ver ExamenController)
 ==========================================
 */
 
 router.get(
     "/tema/:idTema",
     authMiddleware,
-    RecursoController.obtenerPorTema
+    ExamenController.obtenerPorTema
 );
 
 router.get(
     "/:id",
     authMiddleware,
-    RecursoController.obtenerPorId
-);
-
-// :indice es opcional (default 0) para no romper a quien ya llamaba
-// solo con /:id/descargar cuando el recurso tenía un único archivo.
-router.get(
-    "/:id/descargar/:indice?",
-    authMiddleware,
-    RecursoController.descargar
+    ExamenController.obtenerPorId
 );
 
 /*
@@ -44,23 +36,21 @@ router.post(
     "/",
     authMiddleware,
     permitirRoles("docente", "admin"),
-    uploadRecurso.array("archivos", 5),
-    RecursoController.crear
+    ExamenController.crear
 );
 
 router.put(
     "/:id",
     authMiddleware,
     permitirRoles("docente", "admin"),
-    uploadRecurso.array("archivos", 5),
-    RecursoController.actualizar
+    ExamenController.actualizar
 );
 
 router.delete(
     "/:id",
     authMiddleware,
     permitirRoles("docente", "admin"),
-    RecursoController.eliminar
+    ExamenController.eliminar
 );
 
 export default router;

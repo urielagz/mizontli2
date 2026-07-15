@@ -86,8 +86,15 @@ router.post(
     "/:id/entregar",
     authMiddleware,
     permitirRoles("alumno"),
-    uploadEntrega.single("archivo"),
+    uploadEntrega.array("archivos", 5),
     ActividadController.entregar
+);
+
+router.delete(
+    "/:id/entregar",
+    authMiddleware,
+    permitirRoles("alumno"),
+    ActividadController.eliminarEntrega
 );
 
 export default router;

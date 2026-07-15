@@ -4,6 +4,8 @@ import { RepositorioTemas } from "./RepositorioTemas";
 import { RepositorioAsesorias } from "./RepositorioAsesorias";
 import { RepositorioAnuncios } from "./RepositorioAnuncios";
 import { RepositorioDocenteEspera } from "./RepositorioDocenteEspera";
+import { RepositorioPublicaciones } from "./RepositorioPublicacion";
+import { RepositorioComentarios } from "./RepositorioComentarios";
 
 export const repos = {
     usuarios: new RepositorioUsuarios(),
@@ -11,5 +13,7 @@ export const repos = {
     materias: RepositorioMaterias,
     temas: new RepositorioTemas(),
     asesorias: new RepositorioAsesorias(),
-    anuncios: new RepositorioAnuncios()
+    anuncios: new RepositorioAnuncios(),
+    publicaciones: new RepositorioPublicaciones(),
+    comentarios: new RepositorioComentarios()
 };
